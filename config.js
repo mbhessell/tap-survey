@@ -1,8 +1,8 @@
 // Tap Survey settings. The three URLs are the "HTTP URL" of each Power Automate flow's trigger.
 window.TAP_CONFIG = {
-  LOGIN_URL:  "PASTE_LOGIN_URL",   // Draft Survey - Login
-  ROUTE_URL:  "PASTE_ROUTE_URL",   // Draft Survey - Get My Route
-  SUBMIT_URL: "PASTE_SUBMIT_URL",  // Draft Survey - Submit Visit
+  LOGIN_URL:  "https://default0c07cc35444246a2a2b1a250d653b9.2f.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/24/workflows/3807be17aac54045968bfaebf7739c70/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Fw1s4E5enXgXLeCXkFAjp2nDX-nHqTnmWmAXqrwqjXw",   // Draft Survey - Login
+  ROUTE_URL:  "https://default0c07cc35444246a2a2b1a250d653b9.2f.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/28/workflows/fcc21743dbe3473983851725c9925d3d/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=1CZxm3LjLgx5ZcA4uULm4hQSAYoy0_auUcU4NwDVmXw",   // Draft Survey - Get My Route
+  SUBMIT_URL: "https://default0c07cc35444246a2a2b1a250d653b9.2f.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/04/workflows/9191430f2ca74ba2b4477ae3943a1700/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=8SJFdUqyv80yfBpvN3rXCdKMQpurJ5HPnMALgormNrs",  // Draft Survey - Submit Visit
 
   // Line cleaning questions, in order. Saved in Cleaning Records as CleanQ1..CleanQ4.
   // type: "yn" (Yes/No), "num", "pick" (with opts), "text". required: must be answered.
