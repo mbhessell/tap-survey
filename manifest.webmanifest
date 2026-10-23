@@ -1,0 +1,16 @@
+{
+  "name": "Tap Survey",
+  "short_name": "Tap Survey",
+  "description": "Draft line tap survey and line cleaning for F.E.B. line cleaners.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef1f2",
+  "theme_color": "#2f5866",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
