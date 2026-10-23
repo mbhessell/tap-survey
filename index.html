@@ -48,7 +48,7 @@ h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 8px}
 .screen{display:flex;flex-direction:column;gap:16px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
 label{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
-input[type=text],input[type=number],input[type=password],input[type=tel],textarea{width:100%;font:inherit;font-size:17px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+select,input[type=date],input[type=text],input[type=number],input[type=password],input[type=tel],textarea{width:100%;font:inherit;font-size:17px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 textarea{min-height:80px;resize:vertical}
 input:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid var(--steel);outline-offset:2px}
 .hint{font-size:13px;color:var(--muted);margin-top:6px}
@@ -110,6 +110,11 @@ dt{color:var(--muted)} dd{margin:0;font-weight:500;overflow-wrap:anywhere}
 .spin{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--steel);border-radius:50%;animation:s 1s linear infinite;display:inline-block;vertical-align:middle}
 @keyframes s{to{transform:rotate(360deg)}}
 .steps-list{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px}
+.days{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin:0 -2px}
+.day{flex:0 0 auto;min-width:64px;font:inherit;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.day b{font-size:13px}.day span{font-size:12px;color:var(--muted)}
+.day[aria-pressed=true]{border-color:var(--steel);background:var(--steel-soft);color:var(--steel)}
+.stop.plan{cursor:default;opacity:.85}
 .install{background:var(--steel-soft);border-radius:10px;padding:12px;font-size:14px}
 </style>
 </head>

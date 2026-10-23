@@ -21,6 +21,7 @@
   let V = null;            // visit in progress
   let queueCount = 0;
   let device = null;       // {deviceId, deviceKey, employeeId, name}: this phone's registration
+  const pick = { route: (function () { try { return localStorage.getItem("tap_admin_route") || ""; } catch (e) { return ""; } })(), date: "" }; // admin route/date choice
 
   /* ---------- device registration ---------- */
   function randomKey(bytes) {
@@ -82,7 +83,7 @@
   function header(step) {
     const bar = $("#bar"); bar.hidden = !session;
     if (!session) return;
-    $("#who").innerHTML = `${esc(session.name || "")}<br><span class="mono">Route ${esc(session.routeNum || "")}</span>`;
+    $("#who").innerHTML = `${esc(session.name || "")}<br><span class="mono">Route ${esc((route && route.routeNum) || session.routeNum || "")}${route && route.admin ? " · admin" : ""}</span>`;
     const st = $("#steps"), lab = $("#steplabel");
     if (step == null) { st.innerHTML = ""; lab.textContent = ""; }
     else {
@@ -204,16 +205,17 @@
 
   /* ---------- route ---------- */
   async function loadRoute() {
-    show(`<div class="screen center"><span class="spin"></span><p class="sub">Loading today's stops…</p></div>`, null);
+    show(`<div class="screen center"><span class="spin"></span><p class="sub">Loading stops…</p></div>`, null);
     offlineRoute = false;
     try {
-      const r = await post(CFG.ROUTE_URL, Object.assign({ token: session.token }, creds()));
+      const r = await post(CFG.ROUTE_URL, Object.assign({ token: session.token }, creds(), pick.route ? { routeNum: pick.route } : {}, pick.date ? { date: pick.date } : {}));
       if (r.data && r.data.error === "device") return deviceRevoked();
       if (r.status === 401) { await Store.del("session"); return toLogin("Please enter your PIN again."); }
       if (r.status === 403) return show(`<div class="screen"><h1>Access turned off</h1><p class="sub">${esc(r.data.message || "Talk to the office.")}</p></div>`, null);
       if (!r.ok) throw new Error((r.data && r.data.message) || "Could not load route");
-      route = r.data; await Store.set("route", route);
+      route = r.data; if (route.date === todayLocal()) await Store.set("route", route);
     } catch (e) {
+      if (pick.date) { pick.date = ""; return show(`<div class="screen"><h1>No signal</h1><p class="sub">Looking ahead at another day needs signal.</p><button class="btn" id="retry">Back to today</button></div>`, null), ($("#retry").onclick = loadRoute); }
       const cached = await Store.get("route");
       if (cached && cached.date === todayLocal()) { route = cached; offlineRoute = true; }
       else if (cached) { route = cached; offlineRoute = true; }
@@ -234,23 +236,52 @@
     const n = stops.filter(s => s.done).length;
     const last = id => (route.lastVisits || []).find(l => l.customerId === id);
     const dayLabel = route.day + ", " + fmtDate(route.date + "T12:00:00Z");
+    const isToday = route.date === todayLocal();
     show(`<div class="screen">
-      <div><h1>Today's stops</h1><p class="sub">${esc(dayLabel)} · Phase ${esc(route.phase)} · ${n} of ${stops.length} done</p>
+      ${route.admin ? adminPicker() : dayStrip()}
+      <div><h1>${isToday ? "Today's stops" : esc(route.day) + "'s stops"}${route.admin ? " · Route " + esc(route.routeNum) : ""}</h1><p class="sub">${esc(dayLabel)} · Phase ${esc(route.phase)} · ${n} of ${stops.length} done</p>
+      ${isToday ? "" : `<div class="offline">Planning view. Visits can only be recorded on the day itself.</div>`}
       ${offlineRoute ? `<div class="offline">No signal. Showing the route saved on this phone${route.date !== todayLocal() ? " from " + esc(fmtDate(route.date + "T12:00:00Z")) : ""}.</div>` : ""}</div>
       ${stops.length ? `<div class="list">${stops.map((s, i) => {
         const l = last(s.customerId);
         const pill = s.done ? '<span class="pill done">Done</span>' : l ? `<span class="pill todo">Last ${esc(fmtDate(l.lastVisitDate))}</span>` : '<span class="pill new">First visit</span>';
-        return `<button class="stop" data-i="${i}"><div class="meta"><div class="num">#${esc(s.customerId)}</div><div class="name">${esc(s.name)}</div><div class="addr">${esc(s.location || "")}</div></div>${pill}</button>`;
-      }).join("")}</div>` : `<div class="card"><p>No stops are scheduled on your route today.</p></div>`}
+        const inner = `<div class="meta"><div class="num">#${esc(s.customerId)}</div><div class="name">${esc(s.name)}</div><div class="addr">${esc(s.location || "")}</div></div>${pill}`;
+        return isToday ? `<button class="stop" data-i="${i}">${inner}</button>` : `<div class="stop plan">${inner}</div>`;
+      }).join("")}</div>` : `<div class="card"><p>No stops are scheduled on ${isToday ? "your route today" : "this day"}.</p></div>`}
       <button class="btn ghost" id="reload">Refresh stops</button>
       <button class="btn ghost" id="out">Lock app</button>
     </div>`, null);
-    app.querySelectorAll(".stop").forEach(b => b.onclick = () => startVisit(stops[+b.dataset.i]));
+    app.querySelectorAll("button.stop").forEach(b => b.onclick = () => startVisit(stops[+b.dataset.i]));
+    app.querySelectorAll(".day").forEach(b => b.onclick = () => { pick.date = b.dataset.d === todayLocal() ? "" : b.dataset.d; loadRoute(); });
     $("#reload").onclick = loadRoute;
+    if (route.admin) $("#ashow").onclick = () => {
+      pick.route = $("#aroute").value; pick.date = $("#adate").value === todayLocal() ? "" : $("#adate").value;
+      try { localStorage.setItem("tap_admin_route", pick.route); } catch (e) {}
+      loadRoute();
+    };
     $("#out").onclick = async () => {
       await refreshQueue();
       await Store.del("session"); session = null; toLogin();
     };
+  }
+
+  // Today plus the next 6 days, so cleaners can plan ahead (e.g. the night before).
+  function dayStrip() {
+    const days = [];
+    for (let i = 0; i < 7; i++) { const d = new Date(); d.setDate(d.getDate() + i); days.push(d); }
+    const iso = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    return `<div class="days" role="group" aria-label="Pick a day">${days.map((d, i) => {
+      const v = iso(d), lab = i === 0 ? "Today" : i === 1 ? "Tomorrow" : d.toLocaleDateString([], { weekday: "short" });
+      return `<button class="day" data-d="${v}" aria-pressed="${v === route.date}"><b>${lab}</b><span>${d.getMonth() + 1}/${d.getDate()}</span></button>`;
+    }).join("")}</div>`;
+  }
+
+  function adminPicker() {
+    const opts = (route.routes || []).slice().sort((x, y) => String(x.routeNum).localeCompare(String(y.routeNum)));
+    return `<div class="card screen"><div class="hint" style="margin:0"><b>Admin view.</b> Pick any route and day. Visits you submit are recorded under your name.</div>
+      <div><label for="aroute">Route</label><select id="aroute">${opts.map(o => `<option value="${esc(o.routeNum)}" ${String(o.routeNum) === String(route.routeNum) ? "selected" : ""}>${esc(o.routeNum)} · ${esc(o.name || "")}</option>`).join("")}</select></div>
+      <div><label for="adate">Day</label><input type="date" id="adate" value="${esc(route.date)}"></div>
+      <button class="btn small" id="ashow">Show stops</button></div>`;
   }
 
   /* ---------- visit ---------- */
