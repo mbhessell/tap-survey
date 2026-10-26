@@ -254,6 +254,7 @@
     app.querySelectorAll("button.stop").forEach(b => b.onclick = () => startVisit(stops[+b.dataset.i]));
     app.querySelectorAll(".day").forEach(b => b.onclick = () => { pick.date = b.dataset.d === todayLocal() ? "" : b.dataset.d; loadRoute(); });
     $("#reload").onclick = loadRoute;
+    if (route.admin) { const sel = $("#aroute"); const want = String(route.routeNum || "").trim(); if ([...sel.options].some(o => o.value.trim() === want)) sel.value = [...sel.options].find(o => o.value.trim() === want).value; }
     if (route.admin) $("#ashow").onclick = () => {
       pick.route = $("#aroute").value; pick.date = $("#adate").value === todayLocal() ? "" : $("#adate").value;
       try { localStorage.setItem("tap_admin_route", pick.route); } catch (e) {}

@@ -1,9 +1,9 @@
 // Tap Survey service worker: offline app shell + background sending of queued visits (Android/Chrome).
-const VERSION = "tapsurvey-v6";
+const VERSION = "tapsurvey-v7";
 const SHELL = ["./", "index.html", "app.js", "store.js", "config.js", "manifest.webmanifest",
   "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png"];
 
-self.window=self;
+self.window = self; // config.js sets window.TAP_CONFIG; workers have no window
 importScripts("config.js", "store.js");
 
 self.addEventListener("install", e => {
